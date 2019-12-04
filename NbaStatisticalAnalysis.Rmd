@@ -372,6 +372,6 @@ wssResults
 ggplot(data = wssResults, mapping = aes(x= k, y= wss)) +
   geom_point() +
   geom_line() +
-  labs(title = "K-means: Subject Grades", x = "Number of Clusters k", y = "Within Sum of Squares")
+  labs(title = "K-means", x = "Number of Clusters k", y = "Within Sum of Squares")
 ```
 
