@@ -50,7 +50,6 @@ head(seasonStats)
 # Fetch only the years from when the 3-point line was implemented
 post3pl <- subset(seasonStats, Year >= 1980)
 head(post3pl)
-
 # Select only columns that will be used for analysis
 newPost3pl <- select(post3pl, Year, Player, Tm, X2PA, X3PAr, X3P, X3PA, X3P., PTS)
 head(newPost3pl)
@@ -66,10 +65,8 @@ head(newPost3pl)
 ### Group data by year
 ```{r}
 by_year <- group_by(newPost3pl, Year)
-
 avg3pa <- summarise(by_year, Average3PA = mean(X3PA), Average2PA = mean(X2PA))
 head(avg3pa)
-
 ```
 
 ### Visualize the data
@@ -93,8 +90,10 @@ The bar graph clearly shows a meteoric rise in popularity of the 3 point shot. I
 
 ```{r}
 ggplot() + 
-  geom_point(data = avg3pa, aes(x = Year, y = Average2PA), color = "blue") +
-  geom_point(data = avg3pa, aes(x = Year, y = Average3PA), color = "red") +
+  geom_smooth(data = avg3pa, aes(x = Year, y = Average2PA), color = "blue",
+              method = loess) +
+  geom_smooth(data = avg3pa, aes(x = Year, y = Average3PA), color = "red",
+              method = loess) +
   theme(axis.text.x = element_text(angle =- 90, vjust = 0.5)) +
   labs(title = "Average 2pt FGA vs Average 3pt FGA" ,
          subtitle = "NBA: 1980-2017" ,
@@ -122,11 +121,11 @@ head(nbaNow)
 ```
 
 ##Time Series analysis of 3PA
+### Model
 ```{r}
-# ts(data, start, frequency, ...)
-teamSeries = ts(avg3pa[, 2], frequency = 1)
-
-head(teamSeries)
+teamModel <- auto.arima(train3paSeries)
+teamForecast <-forecast(teamModel, h = 12)
+teamForecast
 ```
 
 ### Create Training and Testing Sets
@@ -134,13 +133,9 @@ head(teamSeries)
 # training set: 
 avg3pa$Year <- as.integer(avg3pa$Year)
 train3pa <- subset(avg3pa, Year >= 1980 & Year <= 2005)
-
 train3paSeries = ts(train3pa[, 2], frequency = 1)
-
-
 # test set:   
 test3pa <- subset(avg3pa, Year > 2004)
-
 test3paSeries = ts(test3pa[, 2], frequency = 1)
 ```
 
@@ -155,9 +150,12 @@ head(teamForecast)
 ### History and Predictions
 ```{r}
 plot(teamForecast, main = "Average Predicted 3 pt Attempts", ylab = "Predicted Attempts", xlab = "Season")
-lines(test3paSeries, col="red")
+lines(x = 26:38, y = test3paSeries, col="red")
 legend("topleft", lty = 1, bty = "n", col = c("red","blue"), c("Actual","Predicted"))
 ```
+
+
+
 
 ## Linear Regression
 ### Correlation: Pairs Plot
@@ -188,7 +186,6 @@ Given a loss count of 28, predict the rank.
 ```{r}
 # Create a data frame with a single 3pa entry
 testSet1 <- data.frame(lost = c(28))
-
 # Predict the position with the model and test data
 predictedRank <- predict(rankLostModel, testSet1)
 predictedRank
@@ -201,7 +198,6 @@ Let's see the average rank at 28 loss count
 # Output table with loss of 28
 lost28 <- subset(nba06To11, lost == 28)
 lost28
-
 # Calculate the average and sd of rank when 3pa is 1500
 avgRank <- mean(lost28$rank)
 avgRank
@@ -220,13 +216,18 @@ ggplot(data = nba06To11, mapping = aes(x = lost, y = rank)) +
          x = "Games Lost")
 ```
 
+### Accuracy
+```{r}
+
+```
+
+
 ## Hypothesis Testing
 
 ```{r}
 # Nba Finals 
 champs <- read.csv("Data/championsdata.csv")
 runnerUps <- read.csv("Data/runnerupsdata.csv")
-
 nbaFinals <- rbind(champs, runnerUps)
 head(nbaFinals)
 ```
@@ -304,7 +305,6 @@ If the give Team earns 112 points, 20 assists, and 10 steals, did the Team win o
 testgame <- data.frame(PTS = as.integer(c(112)),
                           AST = as.integer(c(20)),
                           STL = as.integer(c(10)))
-
 predictedOutcome <- predict(tree, newdata = testgame)
 ifelse(predictedOutcome == 1, "Win", "Lose")
 predictedOutcome
@@ -314,7 +314,6 @@ predictedOutcome
 ```{r}
 # Set the random seed
 set.seed(20)
-
 # Extract only team division and width data for clustering
 threept <- data.frame(Attempted = nbaNow$o_3pa, Made = nbaNow$o_3pm)
 head(threept)
@@ -341,11 +340,9 @@ table(threeCluster$cluster, nbaNow$divID)
 ```{r}
 # Add the cluster assignment to each point 
 nbaNow$Cluster <- as.factor(threeCluster$cluster)
-
 # Get centroids
 centroids <- as.data.frame(threeCluster$centers)
 centroids$Cluster <- as.factor(c(1:3))
-
 # Vizualize cluster assignments
 ggplot(data = nbaNow, mapping = aes(o_3pa, o_3pm, color = Cluster)) + 
   geom_point() +
