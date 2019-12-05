@@ -19,6 +19,7 @@ The NBA implemented the now integral three-point line in the 1979-1980 season, i
 #install.packages("TSA")
 #install.packages("party")
 #install.packages("caTools")
+#install.packages("Metrics")
 ```
 
 ### Load libraries
@@ -30,10 +31,12 @@ library(reshape2)
 library(caTools)
 library(party)
 library(rmarkdown)
+library(Metrics)
 ```
 
 ## General Prep
 Firstly we will be looking at data throughout the regular season since the three point line was implemented.
+
 ### Create data frames
 ```{r}
 # General Data
@@ -121,12 +124,6 @@ head(nbaNow)
 ```
 
 ##Time Series analysis of 3PA
-### Model
-```{r}
-teamModel <- auto.arima(train3paSeries)
-teamForecast <-forecast(teamModel, h = 12)
-teamForecast
-```
 
 ### Create Training and Testing Sets
 ```{r}
@@ -154,14 +151,11 @@ lines(x = 26:38, y = test3paSeries, col="red")
 legend("topleft", lty = 1, bty = "n", col = c("red","blue"), c("Actual","Predicted"))
 ```
 
-
-
-
 ## Linear Regression
 ### Correlation: Pairs Plot
 Pair plot to see correlation between variables
 ```{r}
-rank3pm <- select(nba80sTo05, c("rank", "lost"))
+rank3pm <- select(nba06To11, c("rank", "lost"))
 pairs(rank3pm)
 ```
 
@@ -176,18 +170,45 @@ Rank and Games Lost correlation: `r rankLostCorr`.
 ### Univariate Linear Regression
 Given 1 independent variable, predict the dependent variable.
 Given games lost, let's predict the team's rank.
+
+### Get Training and Testing Sets
+sample.split(df$AnyColumn, SplitRatio = decimal)
 ```{r}
-rankLostModel <- lm(rank ~ lost, data = nba06To11)
+# Set the random seed for repeatability
+set.seed(123) 
+
+# Split the data into 3:1 ratio
+sample = sample.split(nba06To11$rank, SplitRatio = .75)
+train = subset(nba06To11, sample == TRUE)
+test  = subset(nba06To11, sample == FALSE)
+```
+
+### Build Model on Training Set
+```{r}
+rankLostModel <- lm(rank ~ lost, data = train)
 rankLostModel
 ```
 
 ### Prediction
+```{r}
+# Predict the position with the model and test data
+predictedRank <- predict(rankLostModel, test)
+predictedRank
+
+# Create data frame with actual and predicted values
+rankPrediction <- data.frame(Lost = test$lost,
+                             ActualRank = test$rank,
+                             PredictedRank = predictedRank)
+
+rankPrediction
+```
+
 Given a loss count of 28, predict the rank.
 ```{r}
 # Create a data frame with a single 3pa entry
-testSet1 <- data.frame(lost = c(28))
+testSet <- data.frame(lost = c(28))
 # Predict the position with the model and test data
-predictedRank <- predict(rankLostModel, testSet1)
+predictedRank <- predict(rankLostModel, testSet)
 predictedRank
 ```
 At 28 games lost, the rank should be approximately, `r predictedRank`.
@@ -216,11 +237,20 @@ ggplot(data = nba06To11, mapping = aes(x = lost, y = rank)) +
          x = "Games Lost")
 ```
 
-### Accuracy
+### Visualize the prediction
 ```{r}
+ggplot(data = rankPrediction, mapping = aes(x = Lost)) +
+  geom_point(data = rankPrediction, 
+             mapping = aes(y = ActualRank),
+             color = "blue") +
+  geom_point(data = rankPrediction, 
+             mapping = aes(y = PredictedRank), 
+             color = "red") +
+  labs(title = "Games Lost vs Rank" ,
+      subtitle = "Actual (Blue) vs. Predicted (Red)",
+      y = "Rank")
 
 ```
-
 
 ## Hypothesis Testing
 
@@ -371,4 +401,3 @@ ggplot(data = wssResults, mapping = aes(x= k, y= wss)) +
   geom_line() +
   labs(title = "K-means", x = "Number of Clusters k", y = "Within Sum of Squares")
 ```
-
