@@ -30,8 +30,10 @@ The NBA implemented the now integral three-point line in the 1979-1980 season, i
 
 ![viz2](https://user-images.githubusercontent.com/47075449/70123698-340a5880-1641-11ea-98c9-0ad632cbe5b0.PNG)
 
-![viz3](https://user-images.githubusercontent.com/47075449/70123701-353b8580-1641-11ea-8120-30432711e068.PNG)
+![viz3v2](https://user-images.githubusercontent.com/47075449/70204674-6b374300-16ef-11ea-9a40-df14da70954c.PNG)
 
 ![viz4](https://user-images.githubusercontent.com/47075449/70123703-366cb280-1641-11ea-873b-5e3b43102042.PNG)
+
+![viz6](https://user-images.githubusercontent.com/47075449/70204686-738f7e00-16ef-11ea-9adc-69dc6e9b1568.PNG)
 
 ![viz5](https://user-images.githubusercontent.com/47075449/70123710-38367600-1641-11ea-93bd-d12fea91f24c.PNG)
